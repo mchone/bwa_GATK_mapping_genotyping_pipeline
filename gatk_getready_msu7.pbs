@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -N gatk_getready_msu7
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=480:00:00
+#PBS -e errlog_gatk_getready_msu7
+#PBS -q high
+
+cd $PBS_O_WORKDIR
+
+./faToTwoBit msu7.fa msu7.2bit
+~/mcbin/sbin/samtools-1.6/samtools faidx msu7.fa
+java -jar ~/mcbin/picard_2.13.2.jar CreateSequenceDictionary REFERENCE=msu7.fa OUTPUT=msu7.dict
+/public/home/hwu/mcbin/gatk-4.0.8.1/gatk BwaMemIndexImageCreator -I msu7.fa -O msu7.fa.img
+/public/home/hwu/mcbin/gatk-4.0.8.1/gatk FindBadGenomicKmersSpark -R msu7.fa -O msu7_kmers_to_ignore.txt

@@ -1,0 +1,17 @@
+#!/bin/bash
+#PBS -N vcf_merge
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=480:00:00
+#PBS -e errlog_vcfmerge
+#PBS -q high
+
+cd $PBS_O_WORKDIR
+
+ls *.vcf |cut -d \_ -f 1 |sort -n |uniq >list
+
+for h in `cat list`
+do
+/public/home/hwu/mcbin/sbin/samtools-1.6/htslib-1.6/bgzip ${h}_mh63_gatk.vcf
+/public/home/hwu/mcbin/sbin/samtools-1.6/htslib-1.6/tabix -p vcf ${h}_mh63_gatk.vcf.gz
+done
+bcftools merge -l vcf.list -o merged.vcf

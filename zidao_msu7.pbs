@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -N bwa_zidao_msu7
+#PBS -l nodes=1:ppn=2
+#PBS -l walltime=480:00:00
+#PBS -e errlog_bwa_zidao_msu7
+#PBS -q high
+
+cd $PBS_O_WORKDIR
+bwa mem -t 2 -M /public/home/hwu/wuhao/zidao/mapping/reference/msu7 zidao_clean_1.fq.gz zidao_clean_2.fq.gz > zidao_msu7.sam
+java -Xmx30g -jar /public/home/hwu/mcbin/picard-tools-1.124/picard.jar AddOrReplaceReadGroups I=zidao_msu7.sam O=zidao_msu7_sorted.bam SO=coordinate CREATE_INDEX=true RGID=zidao RGLB=pe RGPU=HiSeq-3000 RGSM=zidao RGCN=Zidao_Genotypes RGDS=msu7 RGPL=illumina VALIDATION_STRINGENCY=SILENT
+java -Xmx30g -jar /public/home/hwu/mcbin/picard-tools-1.124/picard.jar MarkDuplicates I=zidao_msu7_sorted.bam O=zidao_msu7_dedup.bam CREATE_INDEX=true REMOVE_DUPLICATES=false ASSUME_SORTED=true VALIDATION_STRINGENCY=SILENT METRICS_FILE=zidao_msu7_dedup.metrics
+java -Xmx30g -jar /public/home/hwu/mcbin/GenomeAnalysisTK_038.jar -T RealignerTargetCreator -R /public/home/hwu/wuhao/zidao/mapping/reference/msu7.fa -I zidao_msu7_dedup.bam -o zidao_msu7.intervals
+java -Xmx30g -jar /public/home/hwu/mcbin/GenomeAnalysisTK_038.jar -T IndelRealigner -R /public/home/hwu/wuhao/zidao/mapping/reference/msu7.fa -I zidao_msu7_dedup.bam -targetIntervals zidao_msu7.intervals -o zidao_msu7_realgn.bam
+#java -Xmx30g -jar /public/home/hwu/mcbin/GenomeAnalysisTK_038.jar -T UnifiedGenotyper -R /public/home/hwu/wuhao/zidao/mapping/reference/msu7.fa -I zidao_msu7_realgn.bam -o zidao_msu7_gatk.vcf -stand_call_conf 30.0 -glm BOTH -rf BadCigar

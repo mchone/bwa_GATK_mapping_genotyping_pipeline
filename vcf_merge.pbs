@@ -1,0 +1,16 @@
+#!/bin/bash
+#PBS -N vcf_merge
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=480:00:00
+#PBS -e errlog_vcfmerge
+#PBS -q high
+
+cd $PBS_O_WORKDIR
+
+/public/home/hwu/mcbin/sbin/samtools-1.6/htslib-1.6/bgzip zidao_msu7_gatk.vcf
+/public/home/hwu/mcbin/sbin/samtools-1.6/htslib-1.6/tabix -p vcf zidao_msu7_gatk.vcf.gz
+/public/home/hwu/mcbin/sbin/samtools-1.6/htslib-1.6/bgzip ***_msu7_gatk.vcf
+/public/home/hwu/mcbin/sbin/samtools-1.6/htslib-1.6/tabix -p vcf ***_msu7_gatk.vcf.gz
+#/public/home/hwu/mcbin/sbin/samtools-1.6/htslib-1.6/bgzip ***_msu7_gatk.vcf
+#/public/home/hwu/mcbin/sbin/samtools-1.6/htslib-1.6/tabix -p vcf ***_msu7_gatk.vcf.gz
+bcftools merge -l vcf.list -o merged.vcf

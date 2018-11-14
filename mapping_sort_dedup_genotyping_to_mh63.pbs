@@ -1,0 +1,24 @@
+#!/bin/bash
+#PBS -N bwa_mapping
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=480:00:00
+#PBS -e errlog
+
+cd $PBS_O_WORKDIR
+ls *.gz |cut -d \_ -f 1 |sort -n |uniq >list
+
+for h in `cat list`
+do
+echo -e "#!/bin/bash\n#PBS -N bwa_${h}_mh63\n#PBS -l nodes=2:ppn=2\n#PBS -l walltime=480:00:00\n#PBS -e errlog_bwa_${h}_mh63\n#PBS -q high\n" > bwa_${h}_mh63.pbs
+echo "cd \$PBS_O_WORKDIR" >> bwa_${h}_mh63.pbs
+echo -e "bwa mem -t 4 -M /public/home/hwu/wuhao/zidao/mapping/reference/MH63 ${h}_R1.fq.gz ${h}_R2.fq.gz > ${h}_mh63.sam" >> bwa_${h}_mh63.pbs
+echo -e "java -Xmx20g -jar /public/home/hwu/mcbin/picard-tools-1.124/picard.jar AddOrReplaceReadGroups I=${h}_mh63.sam O=${h}_mh63_sorted.bam SO=coordinate CREATE_INDEX=true RGID=${h} RGLB=pe RGPU=HiSeq-3000 RGSM=${h} RGCN=Black_rice_Genotypes RGDS=mh63 RGPL=illumina VALIDATION_STRINGENCY=SILENT" >> bwa_${h}_mh63.pbs
+echo -e "java -Xmx20g -jar /public/home/hwu/mcbin/picard-tools-1.124/picard.jar MarkDuplicates I=${h}_mh63_sorted.bam O=${h}_mh63_dedup.bam CREATE_INDEX=true REMOVE_DUPLICATES=false ASSUME_SORTED=true VALIDATION_STRINGENCY=SILENT METRICS_FILE=${h}_mh63_dedup.metrics" >> bwa_${h}_mh63.pbs
+echo -e "java -Xmx20g -jar /public/home/hwu/mcbin/GenomeAnalysisTK_038.jar -T RealignerTargetCreator -R /public/home/hwu/wuhao/zidao/mapping/reference/MH63.fa -I ${h}_mh63_dedup.bam -o ${h}_mh63.intervals" >> bwa_${h}_mh63.pbs
+echo -e "java -Xmx20g -jar /public/home/hwu/mcbin/GenomeAnalysisTK_038.jar -T IndelRealigner -R /public/home/hwu/wuhao/zidao/mapping/reference/MH63.fa -I ${h}_mh63_dedup.bam -targetIntervals ${h}_mh63.intervals -o ${h}_mh63_realgn.bam" >> bwa_${h}_mh63.pbs 
+echo -e "java -Xmx20g -jar /public/home/hwu/mcbin/GenomeAnalysisTK_038.jar -T UnifiedGenotyper -R /public/home/hwu/wuhao/zidao/mapping/reference/MH63.fa -I ${h}_mh63_realgn.bam -o ${h}_mh63_gatk.vcf -stand_call_conf 30.0 -glm BOTH -rf BadCigar" >> bwa_${h}_mh63.pbs
+qsub bwa_${h}_mh63.pbs
+done
+
+rm bwa_mapping.o*
+rm errlog
