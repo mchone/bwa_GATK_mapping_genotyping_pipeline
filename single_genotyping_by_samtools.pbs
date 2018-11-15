@@ -1,0 +1,10 @@
+#!/bin/bash
+#PBS -N single_genotyping_by_samtools
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=480:00:00
+#PBS -e errlog_gt
+#PBS -q high
+
+cd $PBS_O_WORKDIR
+
+samtools mpileup -u -t DP,ADF,ADR,SP,AD -C50 -f ./reference/msu7.fa -l locus_list -b bam.list_2 | bcftools call -Am  -O v - > PP_msu7_samtools.vcf

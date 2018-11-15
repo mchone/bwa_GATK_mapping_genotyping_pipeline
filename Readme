@@ -2,3 +2,4 @@
 2. zidao_msu7.pbs用于单个重测序数据对指定参考基因组的mapping到genotyping流程，结果为_gatk.vcf。
 3. 如果有多个重测序数据结果，可以使用vcf_merge.pbs对它们进行整合，形成一个vcf文件，注意需要编辑vcf.list文件
 4. 若存在大量重测序数据需批量完成，mapping_sort_dedup_genotyping_to_mh63.pbs可以批量化提交作业，注意替换对应软件及参考基因组路径,vcf_merge_para.pbs为对应整合脚本。
+5. single_genotyping_by_samtools.pbs用于对单个（或多个，取决于bam.list_2中bam文件）重测序_realgn.bam，提取locus_list中指定的多态性位点进行samtools Genotyping。
